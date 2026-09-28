@@ -1,0 +1,17 @@
+# Local Postgres for optional prediction logging.
+#   docker compose up -d
+#   DATABASE_URL=postgres://analyzer:analyzer@localhost:5432/analyzer
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: analyzer
+      POSTGRES_PASSWORD: analyzer
+      POSTGRES_DB: analyzer
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./server/db/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
