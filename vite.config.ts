@@ -9,14 +9,15 @@ export default defineConfig(() => ({
     hmr: {
       overlay: false,
     },
+    // In development the frontend calls /api/* on its own origin.
+    proxy: {
+      "/api": process.env.API_PROXY_TARGET ?? "http://localhost:3000",
+    },
   },
   plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-  },
-  build: {
-    chunkSizeWarningLimit: 1000,
   },
 }));

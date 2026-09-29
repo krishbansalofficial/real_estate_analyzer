@@ -1,109 +1,89 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Bed, Bath, Square, TreePine } from 'lucide-react';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Bath, Bed, MapPin, Square } from "lucide-react";
+
+import Stepper from "@/components/Stepper";
+import { LIMITS, type AnalyzerPrefill } from "@/lib/property";
 
 const QuickAnalyzer = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    beds: 3,
-    baths: 2,
-    sqft: 1800,
-    lot: 0.25,
-  });
+  const [beds, setBeds] = useState(3);
+  const [baths, setBaths] = useState(2);
+  const [sqft, setSqft] = useState(1800);
+  const [zip, setZip] = useState("");
 
-  const handleChange = (field: string, value: number) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handlePredict = () => {
-    navigate('/analyzer', { state: formData });
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const state: AnalyzerPrefill = { beds, baths, sqft, query: zip };
+    navigate("/analyzer", { state });
   };
 
   return (
-    <div className="bg-card rounded-3xl p-6 md:p-8 shadow-soft">
+    <form onSubmit={handleSubmit} className="bg-card rounded-3xl p-6 md:p-8 shadow-soft">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-        {/* Beds */}
         <div className="flex flex-col gap-3">
-          <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          <span className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
             <Bed className="w-4 h-4" />
             Beds
-          </label>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleChange('beds', Math.max(1, formData.beds - 1))}
-              className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-            >
-              -
-            </button>
-            <span className="w-8 text-center font-medium text-foreground">{formData.beds}</span>
-            <button
-              onClick={() => handleChange('beds', formData.beds + 1)}
-              className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-            >
-              +
-            </button>
-          </div>
+          </span>
+          <Stepper label="Beds" value={beds} {...LIMITS.bed} onChange={setBeds} />
         </div>
 
-        {/* Baths */}
         <div className="flex flex-col gap-3">
-          <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          <span className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
             <Bath className="w-4 h-4" />
             Baths
-          </label>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleChange('baths', Math.max(1, formData.baths - 1))}
-              className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-            >
-              -
-            </button>
-            <span className="w-8 text-center font-medium text-foreground">{formData.baths}</span>
-            <button
-              onClick={() => handleChange('baths', formData.baths + 1)}
-              className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-            >
-              +
-            </button>
-          </div>
+          </span>
+          <Stepper label="Baths" value={baths} {...LIMITS.bath} onChange={setBaths} />
         </div>
 
-        {/* Sqft */}
         <div className="flex flex-col gap-3">
-          <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          <label
+            htmlFor="quick-sqft"
+            className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+          >
             <Square className="w-4 h-4" />
             Sq Ft
           </label>
           <input
+            id="quick-sqft"
             type="number"
-            value={formData.sqft}
-            onChange={(e) => handleChange('sqft', parseInt(e.target.value) || 0)}
+            inputMode="numeric"
+            min={LIMITS.house_size.min}
+            max={LIMITS.house_size.max}
+            value={sqft}
+            onChange={(e) => setSqft(Number(e.target.value))}
             className="input-calm text-center"
           />
         </div>
 
-        {/* Lot */}
         <div className="flex flex-col gap-3">
-          <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <TreePine className="w-4 h-4" />
-            Lot (acres)
+          <label
+            htmlFor="quick-zip"
+            className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+          >
+            <MapPin className="w-4 h-4" />
+            Zip code
           </label>
           <input
-            type="number"
-            step="0.01"
-            value={formData.lot}
-            onChange={(e) => handleChange('lot', parseFloat(e.target.value) || 0)}
+            id="quick-zip"
+            inputMode="numeric"
+            autoComplete="postal-code"
+            maxLength={5}
+            value={zip}
+            onChange={(e) => setZip(e.target.value.replace(/\D/g, ""))}
+            placeholder="24060"
             className="input-calm text-center"
           />
         </div>
       </div>
 
       <div className="mt-6 md:mt-8 flex justify-center">
-        <button onClick={handlePredict} className="btn-primary px-10">
-          Predict Price
+        <button type="submit" className="btn-primary px-10">
+          Estimate Price
         </button>
       </div>
-    </div>
+    </form>
   );
 };
 
