@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useQueries } from "@tanstack/react-query";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import SearchBar from "@/components/SearchBar";
@@ -13,50 +14,42 @@ import property2 from "@/assets/property-2.jpg";
 import property3 from "@/assets/property-3.jpg";
 import property4 from "@/assets/property-4.jpg";
 
-const properties = [
-  {
-    id: 1,
-    image: property1,
-    title: "Coastal Modern Retreat",
-    location: "Malibu, CA",
-    price: "$2,450,000",
-    beds: 4,
-    baths: 3,
-    sqft: 3200,
-  },
-  {
-    id: 2,
-    image: property2,
-    title: "Mountain Lodge Estate",
-    location: "Aspen, CO",
-    price: "$3,100,000",
-    beds: 5,
-    baths: 4,
-    sqft: 4500,
-  },
-  {
-    id: 3,
-    image: property3,
-    title: "Historic Brownstone",
-    location: "Brooklyn, NY",
-    price: "$1,850,000",
-    beds: 3,
-    baths: 2,
-    sqft: 2100,
-  },
-  {
-    id: 4,
-    image: property4,
-    title: "Country Farmhouse",
-    location: "Nashville, TN",
-    price: "$890,000",
-    beds: 4,
-    baths: 3,
-    sqft: 2800,
-  },
+import metrics from "@/data/model-metrics.json";
+import { predictPrice } from "@/lib/api";
+import { formatPrice, type AnalyzerPrefill } from "@/lib/property";
+
+// Example homes; the price on each card is the model's live estimate.
+const examples = [
+  { image: property1, title: "Coastal home", location: "Malibu, CA", zip: "90265", beds: 4, baths: 3, sqft: 3200, lot: 0.5 },
+  { image: property2, title: "Mountain home", location: "Aspen, CO", zip: "81611", beds: 5, baths: 4, sqft: 4500, lot: 1 },
+  { image: property3, title: "City townhouse", location: "Brooklyn, NY", zip: "11215", beds: 3, baths: 2, sqft: 2100, lot: null },
+  { image: property4, title: "Suburban farmhouse", location: "Nashville, TN", zip: "37215", beds: 4, baths: 3, sqft: 2800, lot: 0.75 },
+];
+
+const stats = [
+  { value: `${metrics.model.median_abs_pct_error}%`, label: "Median error on held-out homes" },
+  { value: `${Math.round(metrics.model.within_20_pct)}%`, label: "Of estimates within 20%" },
+  { value: `${(metrics.data.train_rows / 1e6).toFixed(1)}M`, label: "Homes in training data" },
+  { value: metrics.data.zip_codes.toLocaleString(), label: "Zip codes covered" },
 ];
 
 const Index = () => {
+  const navigate = useNavigate();
+  const estimates = useQueries({
+    queries: examples.map((home) => ({
+      queryKey: ["example-estimate", home.zip, home.beds, home.baths, home.sqft, home.lot],
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        predictPrice(
+          { bed: home.beds, bath: home.baths, house_size: home.sqft, acre_lot: home.lot, zip_code: home.zip },
+          signal,
+        ),
+      staleTime: Infinity,
+      retry: false,
+    })),
+  });
+
+  const analyze = (prefill: AnalyzerPrefill) => navigate("/analyzer", { state: prefill });
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -83,13 +76,13 @@ const Index = () => {
               className="body-large mb-8 animate-fade-up"
               style={{ animationDelay: "0.1s" }}
             >
-              Discover intelligent property analysis with beautiful simplicity.
-              No clutter, no overwhelm—just clarity.
+              Estimate what a home is worth from its size, rooms and zip code,
+              with an honest range instead of false precision.
             </p>
             <div className="animate-fade-up" style={{ animationDelay: "0.2s" }}>
               <SearchBar
-                placeholder="Enter address or zip code..."
-                onSearch={(query) => console.log("Search:", query)}
+                placeholder="Enter a zip code or City, ST…"
+                onSearch={(query) => analyze({ query })}
               />
             </div>
             <div
@@ -100,8 +93,8 @@ const Index = () => {
                 Analyze Property
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
-              <Link to="/properties" className="btn-ghost">
-                View Listings
+              <Link to="/about" className="btn-ghost">
+                How it works
               </Link>
             </div>
           </div>
@@ -121,7 +114,7 @@ const Index = () => {
               Quick Estimate
             </h2>
             <p className="body-large max-w-2xl mx-auto">
-              Get an instant price prediction in seconds
+              A price estimate in about a second
             </p>
           </div>
           <QuickAnalyzer />
@@ -134,37 +127,44 @@ const Index = () => {
           <div className="flex items-end justify-between mb-10">
             <div>
               <h2 className="heading-section text-foreground mb-2">
-                Popular Properties
+                Same model, different markets
               </h2>
               <p className="text-muted-foreground">
-                Explore trending listings in top markets
+                Live estimates for example homes. Photos are illustrative.
               </p>
             </div>
-            <Link
-              to="/properties"
-              className="btn-ghost hidden md:flex items-center gap-2"
-            >
-              View All
-              <ArrowRight className="w-4 h-4" />
-            </Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {properties.map((property, index) => (
-              <div
-                key={property.id}
-                className="animate-fade-up"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <PropertyCard {...property} />
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-8 text-center md:hidden">
-            <Link to="/properties" className="btn-secondary">
-              View All Properties
-            </Link>
+            {examples.map((home, index) => {
+              const { data, isError } = estimates[index];
+              const price = data
+                ? `Est. ${formatPrice(data.estimate)}`
+                : isError
+                  ? "Estimate unavailable"
+                  : "Estimating…";
+              return (
+                <div
+                  key={home.zip}
+                  className="animate-fade-up"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <PropertyCard
+                    {...home}
+                    price={price}
+                    onClick={() =>
+                      analyze({
+                        beds: home.beds,
+                        baths: home.baths,
+                        sqft: home.sqft,
+                        lot: home.lot,
+                        query: home.zip,
+                      })
+                    }
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -181,24 +181,17 @@ const Index = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
 
             <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
-              <span className="inline-block px-4 py-1.5 bg-primary text-primary-foreground text-sm rounded-full mb-4">
-                Featured
-              </span>
               <h3 className="text-3xl md:text-4xl font-serif text-card mb-3">
-                Penthouse with Panoramic Views
+                Know the range before you negotiate
               </h3>
               <p className="text-card/80 mb-6 max-w-xl">
-                Experience luxury living at its finest with floor-to-ceiling
-                windows and world-class amenities in the heart of the city.
+                Every estimate comes with an 80% range, the typical price per
+                square foot in the area, and similar homes from the same zip
+                code.
               </p>
-              <div className="flex items-center gap-4">
-                <span className="text-2xl font-serif text-card">
-                  $4,200,000
-                </span>
-                <Link to="/analyzer" className="btn-primary">
-                  Get Analysis
-                </Link>
-              </div>
+              <Link to="/analyzer" className="btn-primary">
+                Analyze a property
+              </Link>
             </div>
           </div>
         </div>
@@ -214,16 +207,17 @@ const Index = () => {
                 beautiful simplicity
               </h2>
               <p className="body-large mb-6">
-                Real Estate Analyzer combines advanced machine learning with an
-                intuitive interface to give you accurate property valuations
-                without the noise.
+                A gradient-boosted model trained on{" "}
+                {metrics.data.rows_used.toLocaleString()} US listings and sales
+                learns how size, rooms, lot and location drive price, and tells
+                you how confident it is.
               </p>
               <div className="space-y-4">
                 {[
-                  "ML-powered price predictions",
-                  "Real-time market comparisons",
-                  "Clean, distraction-free experience",
-                  "Trusted by thousands of homeowners",
+                  "Location-aware estimates down to the zip code",
+                  "Calibrated 80% price ranges",
+                  "Comparable homes from the same zip code",
+                  "Accuracy measured on homes the model never saw",
                 ].map((item, index) => (
                   <div key={index} className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-primary" />
@@ -240,32 +234,14 @@ const Index = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="card-soft p-6 text-center">
-                <div className="text-4xl font-serif text-primary mb-2">98%</div>
-                <p className="text-sm text-muted-foreground">Accuracy Rate</p>
-              </div>
-              <div className="card-soft p-6 text-center">
-                <div className="text-4xl font-serif text-primary mb-2">
-                  50K+
+              {stats.map((stat) => (
+                <div key={stat.label} className="card-soft p-6 text-center">
+                  <div className="text-4xl font-serif text-primary mb-2">
+                    {stat.value}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{stat.label}</p>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Properties Analyzed
-                </p>
-              </div>
-              <div className="card-soft p-6 text-center">
-                <div className="text-4xl font-serif text-primary mb-2">
-                  2.5s
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Average Response
-                </p>
-              </div>
-              <div className="card-soft p-6 text-center">
-                <div className="text-4xl font-serif text-primary mb-2">
-                  4.9★
-                </div>
-                <p className="text-sm text-muted-foreground">User Rating</p>
-              </div>
+              ))}
             </div>
           </div>
         </div>

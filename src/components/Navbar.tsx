@@ -62,16 +62,6 @@ const Navbar = () => {
               Analyzer
             </Link>
             <Link
-              to="/properties"
-              className={`text-sm font-medium transition-colors duration-200 ${
-                isActive("/properties")
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Properties
-            </Link>
-            <Link
               to="/about"
               className={`text-sm font-medium transition-colors duration-200 ${
                 isActive("/about")
@@ -79,7 +69,7 @@ const Navbar = () => {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              About
+              How it works
             </Link>
           </div>
 
@@ -128,24 +118,13 @@ const Navbar = () => {
                 Analyzer
               </Link>
               <Link
-                to="/properties"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`text-sm font-medium py-2 ${
-                  isActive("/properties")
-                    ? "text-primary"
-                    : "text-muted-foreground"
-                }`}
-              >
-                Properties
-              </Link>
-              <Link
                 to="/about"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={`text-sm font-medium py-2 ${
                   isActive("/about") ? "text-primary" : "text-muted-foreground"
                 }`}
               >
-                About
+                How it works
               </Link>
               <Link
                 to="/analyzer"

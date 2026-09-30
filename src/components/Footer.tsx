@@ -1,12 +1,16 @@
 import { Link } from "react-router-dom";
-import { MapPin, Mail, Phone } from "lucide-react";
+import { Database, Github, MapPin } from "lucide-react";
+
+const linkClass =
+  "text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors";
+
 const Footer = () => {
   return (
     <footer className="bg-primary text-primary-foreground py-16 md:py-20">
       <div className="container-calm">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-8">
           {/* Brand */}
-          <div className="md:col-span-1">
+          <div className="md:col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 rounded-xl bg-primary-foreground/10 flex items-center justify-center">
                 <span className="text-primary-foreground font-serif text-lg font-semibold">
@@ -17,46 +21,33 @@ const Footer = () => {
                 Real Estate Analyzer
               </span>
             </Link>
-            <p className="text-primary-foreground/70 text-sm leading-relaxed">
-              Discover your home's true value with intelligent analysis and
-              beautiful simplicity.
+            <p className="text-primary-foreground/70 text-sm leading-relaxed max-w-sm">
+              Machine-learning price estimates with honest ranges. An educational
+              project, not an appraisal.
+            </p>
+            <p className="flex items-center gap-2 text-sm text-primary-foreground/70 mt-4">
+              <MapPin className="w-4 h-4" />
+              Blacksburg, VA
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-medium mb-4">Quick Links</h4>
+            <h4 className="font-medium mb-4">Explore</h4>
             <ul className="space-y-3">
               <li>
-                <Link
-                  to="/"
-                  className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors"
-                >
+                <Link to="/" className={linkClass}>
                   Home
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/analyzer"
-                  className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors"
-                >
+                <Link to="/analyzer" className={linkClass}>
                   Price Analyzer
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/properties"
-                  className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors"
-                >
-                  Properties
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/about"
-                  className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors"
-                >
-                  About Us
+                <Link to="/about" className={linkClass}>
+                  How it works
                 </Link>
               </li>
             </ul>
@@ -68,83 +59,46 @@ const Footer = () => {
             <ul className="space-y-3">
               <li>
                 <a
-                  href="#"
-                  className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+                  href="https://www.kaggle.com/datasets/ahmedshahriarsakib/usa-real-estate-dataset"
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`${linkClass} inline-flex items-center gap-2`}
                 >
-                  Market Reports
+                  <Database className="w-4 h-4" />
+                  Dataset
                 </a>
               </li>
               <li>
                 <a
-                  href="#"
-                  className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+                  href="https://github.com/krishbansalofficial/real_estate_analyzer"
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`${linkClass} inline-flex items-center gap-2`}
                 >
-                  Buying Guide
+                  <Github className="w-4 h-4" />
+                  Source code
                 </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors"
-                >
-                  Selling Tips
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors"
-                >
-                  FAQ
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h4 className="font-medium mb-4">Contact</h4>
-            <ul className="space-y-3">
-              <li className="flex items-center gap-2 text-sm text-primary-foreground/70">
-                <MapPin className="w-4 h-4" />
-                Balcksburg, VA
-              </li>
-              <li className="flex items-center gap-2 text-sm text-primary-foreground/70">
-                <Mail className="w-4 h-4" />
-                hello@9800.com
-              </li>
-              <li className="flex items-center gap-2 text-sm text-primary-foreground/70">
-                <Phone className="w-4 h-4" />
-                (415) 555-0123
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Bottom */}
         <div className="mt-12 pt-8 border-t border-primary-foreground/10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-primary-foreground/50">
-              © 2025 Real Estate Analyzer. All rights reserved.
+              © {new Date().getFullYear()} Real Estate Analyzer
             </p>
-            <div className="flex items-center gap-6">
-              <a
-                href="#"
-                className="text-sm text-primary-foreground/50 hover:text-primary-foreground transition-colors"
-              >
-                Privacy
-              </a>
-              <a
-                href="#"
-                className="text-sm text-primary-foreground/50 hover:text-primary-foreground transition-colors"
-              >
-                Terms
-              </a>
-            </div>
+            <Link
+              to="/privacy"
+              className="text-sm text-primary-foreground/50 hover:text-primary-foreground transition-colors"
+            >
+              Privacy
+            </Link>
           </div>
         </div>
       </div>
     </footer>
   );
 };
+
 export default Footer;
